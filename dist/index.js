@@ -37,16 +37,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__webpack_require__(186));
-const wait_1 = __webpack_require__(817);
+const child_process_1 = __webpack_require__(129);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const ms = core.getInput('milliseconds');
-            core.debug(`Waiting ${ms} milliseconds ...`); // debug is only output if you set the secret `ACTIONS_RUNNER_DEBUG` to true
-            core.debug(new Date().toTimeString());
-            yield wait_1.wait(parseInt(ms, 10));
-            core.debug(new Date().toTimeString());
-            core.setOutput('time', new Date().toTimeString());
+            const inputList = core.getInput('list');
+            const list = JSON.parse(inputList);
+            const inputCommand = core.getInput('command');
+            for (const item of list) {
+                core.info(yield promiseExec(`${inputCommand}`, { item }));
+            }
         }
         catch (error) {
             core.setFailed(error.message);
@@ -54,36 +54,16 @@ function run() {
     });
 }
 run();
-
-
-/***/ }),
-
-/***/ 817:
-/***/ (function(__unused_webpack_module, exports) {
-
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.wait = void 0;
-function wait(milliseconds) {
-    return __awaiter(this, void 0, void 0, function* () {
-        return new Promise(resolve => {
-            if (isNaN(milliseconds)) {
-                throw new Error('milliseconds not a number');
+function promiseExec(command, env) {
+    return new Promise((res, reject) => {
+        child_process_1.exec(command, { env }, function (error, stdout) {
+            if (error) {
+                return reject(error);
             }
-            setTimeout(() => resolve('done!'), milliseconds);
+            return res(stdout);
         });
     });
 }
-exports.wait = wait;
 
 
 /***/ }),
@@ -474,6 +454,13 @@ function toCommandValue(input) {
 }
 exports.toCommandValue = toCommandValue;
 //# sourceMappingURL=utils.js.map
+
+/***/ }),
+
+/***/ 129:
+/***/ ((module) => {
+
+module.exports = require("child_process");;
 
 /***/ }),
 

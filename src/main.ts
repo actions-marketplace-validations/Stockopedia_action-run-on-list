@@ -1,19 +1,32 @@
 import * as core from '@actions/core'
-import {wait} from './wait'
+import {exec} from 'child_process'
 
 async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
-    core.debug(`Waiting ${ms} milliseconds ...`) // debug is only output if you set the secret `ACTIONS_RUNNER_DEBUG` to true
+    const inputList: string = core.getInput('list')
+    const list = JSON.parse(inputList)
+    const inputCommand: string = core.getInput('command')
 
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
-
-    core.setOutput('time', new Date().toTimeString())
+    for (const item of list) {
+      core.info(await promiseExec(`${inputCommand}`, {item}))
+    }
   } catch (error) {
     core.setFailed(error.message)
   }
 }
 
 run()
+
+function promiseExec(
+  command: string,
+  env?: {[key: string]: string}
+): Promise<string> {
+  return new Promise<string>((res, reject) => {
+    exec(command, {env}, function (error, stdout) {
+      if (error) {
+        return reject(error)
+      }
+      return res(stdout)
+    })
+  })
+}
